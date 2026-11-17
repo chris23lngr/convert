@@ -28,7 +28,10 @@
 
 Select one or more files in Finder → right-click → **Quick Actions → Convert…**
 
-A small window opens showing only the formats that make sense for what you selected. Pick one, tweak the settings if you want, and hit **Convert**. The new file lands next to the original (`song.opus` → `song.mp3`, and if that exists, `song 2.mp3`).
+A small window opens showing only the formats that make sense for what you selected. Pick one and hit **Convert**. The new file lands next to the original (`song.opus` → `song.mp3`, and if that exists, `song 2.mp3`).
+
+- **Batches:** select as many files as you like (of the same kind: audio, video, images, documents or PDFs) and they're converted one after another with one progress bar. Video and audio can be mixed, since a video can become audio.
+- **Move original to Trash:** tick the box and each original goes to the Trash once its conversion has finished. It only happens after the new file exists, and you can always put it back from the Trash.
 
 | You select | You can convert to |
 |---|---|
@@ -38,7 +41,7 @@ A small window opens showing only the formats that make sense for what you selec
 | 📄 **Documents** (docx, doc, odt, rtf, html, txt, md) | PDF, Word (DOCX / DOC), ODT, RTF, plain text, HTML |
 | 📕 **PDF** | PNG or JPEG images (one per page), plain text |
 
-**Settings you can change** (remembered per format):
+**Settings** live under **Advanced** (collapsed until you open it; remembered per format):
 
 - **Audio:** bitrate (e.g. MP3 VBR or 320/256/192/128 kbps), sample rate, mono/stereo, 16- or 24-bit for lossless formats
 - **Video:** quality slider, resolution (4K → 480p, never upscales), frame rate, keep or drop audio, hardware encoding on/off

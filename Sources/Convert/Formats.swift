@@ -197,6 +197,9 @@ extension Target {
     }
 
     var hasChannelOption: Bool { id != "ogg" }
+
+    /// Whether the panel has anything to show under "Advanced" for this format.
+    var hasSettings: Bool { !(group == .document && id != "pdf-doc") && id != "pdf-txt" }
 }
 
 struct ConvSettings: Codable, Equatable {

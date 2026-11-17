@@ -17,6 +17,7 @@ struct ContentView: View {
     @ObservedObject var model: ConvertModel
     @State private var dropTargeted = false
     @State private var quickActionInstalled = QuickAction.isInstalled
+    @AppStorage("showAdvanced") private var showAdvanced = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -31,8 +32,13 @@ struct ContentView: View {
                     .fixedSize(horizontal: false, vertical: true)
             } else if let target = model.target {
                 FormRow("Convert to") { formatPicker }
-                SettingsView(target: target, s: $model.settings)
-                    .disabled(model.phase != .idle)
+                if target.hasSettings {
+                    FormRow("") { advancedToggle }
+                    if showAdvanced {
+                        SettingsView(target: target, s: $model.settings)
+                            .disabled(model.phase != .idle)
+                    }
+                }
             }
 
             Divider()
@@ -153,6 +159,25 @@ struct ContentView: View {
         .disabled(model.phase != .idle)
     }
 
+    // MARK: Advanced
+
+    /// Settings stay out of the way until asked for; the choice is remembered.
+    private var advancedToggle: some View {
+        Button {
+            withAnimation(.easeInOut(duration: 0.2)) { showAdvanced.toggle() }
+        } label: {
+            HStack(spacing: 5) {
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 10, weight: .semibold))
+                    .rotationEffect(.degrees(showAdvanced ? 90 : 0))
+                Text("Advanced")
+            }
+            .foregroundStyle(.secondary)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+    }
+
     // MARK: Footer
 
     @ViewBuilder
@@ -163,6 +188,11 @@ struct ContentView: View {
                 if model.target?.group == .audio || model.target?.group == .video, Tools.ffmpeg == nil {
                     Label("Needs ffmpeg (brew install ffmpeg)", systemImage: "exclamationmark.triangle")
                         .font(.caption).foregroundStyle(.orange)
+                } else {
+                    Toggle(model.files.count > 1 ? "Move originals to Trash" : "Move original to Trash",
+                           isOn: $model.trashOriginals)
+                        .toggleStyle(.checkbox)
+                        .help("Once a file has converted, its original goes to the Trash. You can still put it back from there.")
                 }
                 Spacer()
                 Button("Cancel") { model.onClose() }
@@ -189,6 +219,11 @@ struct ContentView: View {
                     Label("Converted \(model.outputs.count) \(model.outputs.count == 1 ? "file" : "files")",
                           systemImage: "checkmark.circle.fill")
                         .foregroundStyle(.green)
+                }
+                if model.trashed > 0 {
+                    Label("Moved \(model.trashed == 1 ? "the original" : "\(model.trashed) originals") to the Trash",
+                          systemImage: "trash")
+                        .font(.caption).foregroundStyle(.secondary)
                 }
                 if model.stopped {
                     Label("Stopped", systemImage: "stop.circle").foregroundStyle(.secondary)

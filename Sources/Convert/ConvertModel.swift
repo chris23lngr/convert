@@ -15,6 +15,11 @@ final class ConvertModel: ObservableObject {
     @Published private(set) var outputs: [URL] = []
     @Published private(set) var errors: [String] = []
     @Published private(set) var stopped = false
+    @Published private(set) var trashed = 0
+    /// Move each original to the Trash once its conversion succeeded (remembered).
+    @Published var trashOriginals = UserDefaults.standard.bool(forKey: "trashOriginals") {
+        didSet { UserDefaults.standard.set(trashOriginals, forKey: "trashOriginals") }
+    }
 
     var onClose: () -> Void = {}
     private var loading = false
@@ -47,7 +52,7 @@ final class ConvertModel: ObservableObject {
     }
 
     private func reset() {
-        phase = .idle; outputs = []; errors = []; progress = 0; stopped = false
+        phase = .idle; outputs = []; errors = []; progress = 0; stopped = false; trashed = 0
     }
 
     private func chooseTarget() {
@@ -83,7 +88,7 @@ final class ConvertModel: ObservableObject {
         guard let t = target, phase == .idle, !files.isEmpty else { return }
         reset()
         phase = .running
-        let list = files, s = settings, runner = runner
+        let list = files, s = settings, runner = runner, trash = trashOriginals
         Task {
             let n = Double(list.count)
             for (i, file) in list.enumerated() {
@@ -97,7 +102,18 @@ final class ConvertModel: ObservableObject {
                     }
                 }
                 do {
-                    outputs += try await Converter.convert(file, to: t, settings: s, runner: runner, progress: report)
+                    let made = try await Converter.convert(file, to: t, settings: s, runner: runner, progress: report)
+                    outputs += made
+                    // Only after a finished, separate output exists on disk; the Trash keeps it recoverable.
+                    if trash, !stopped, !made.isEmpty, !made.contains(file),
+                       made.allSatisfy({ FileManager.default.fileExists(atPath: $0.path) }) {
+                        do {
+                            try FileManager.default.trashItem(at: file, resultingItemURL: nil)
+                            trashed += 1
+                        } catch {
+                            errors.append("\(file.lastPathComponent): converted, but couldn't move it to the Trash")
+                        }
+                    }
                 } catch {
                     if !stopped { errors.append("\(file.lastPathComponent): \(error.localizedDescription)") }
                 }
