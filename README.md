@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/eliasdesena/convert/releases/latest/download/Convert.zip"><strong>Download for Mac</strong></a>
+  <a href="https://github.com/newtonstudios/convert/releases/latest/download/Convert.zip"><strong>Download for Mac</strong></a>
   &nbsp;·&nbsp;
   <a href="https://convert.newtonbuilds.dev">Website</a>
 </p>
@@ -76,7 +76,7 @@ Convert isn't signed with a paid Apple Developer certificate, so the first time 
 **Option B: build it yourself** (needs Xcode 15 or later):
 
 ```bash
-git clone https://github.com/eliasdesena/convert.git
+git clone https://github.com/newtonstudios/convert.git
 cd convert
 ./build.sh --install
 ```
