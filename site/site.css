@@ -1,4 +1,36 @@
-/* Convert site: the app icon in the wordmark. Tokens only. */
+/*
+ * Convert site additions. Tokens are defined here (not in saas/tokens.css) so the
+ * repo carries them; every rule below uses only tokens.
+ */
+:root {
+  /* the app icon beside the wordmark */
+  --sa-mark: 1.4em;
+  --sa-mark-gap: 0.3em;
+
+  /* card illustrations: two files, the original behind and the converted one in front,
+     the same motif as the app icon */
+  --cv-stage-w: 208px;
+  --cv-stage-h: 148px;
+  --cv-file-w: 96px;
+  --cv-file-h: 120px;
+  --cv-file-r: 20px;
+  --cv-back-x: 20px;
+  --cv-back-y: 18px;
+  --cv-front-x: 92px;
+  --cv-front-y: 6px;
+  --cv-tilt-back: -9deg;
+  --cv-tilt-front: 5deg;
+  --cv-glyph-h: 40px;
+  --cv-bar-w: 6px;
+  --cv-bar-gap: 4px;
+  --cv-line-h: 6px;
+  --cv-head-h: 9px;
+  --cv-photo-r: 10px;
+  --cv-photo-a: #ffb36b;
+  --cv-photo-b: #ff6f61;
+  --cv-photo-c: #1d4f9e;
+}
+
 .mark {
   display: inline-flex;
   align-items: center;
@@ -8,4 +40,105 @@
 .mark img {
   inline-size: var(--sa-mark);
   block-size: var(--sa-mark);
+}
+
+/* ---------- Card illustration ---------- */
+.cv {
+  position: relative;
+  inline-size: var(--cv-stage-w);
+  block-size: var(--cv-stage-h);
+  margin-inline: auto;
+}
+
+.cv__file {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  inline-size: var(--cv-file-w);
+  block-size: var(--cv-file-h);
+  padding: var(--sa-space-5) var(--sa-space-3) var(--sa-space-3);
+  border-radius: var(--cv-file-r);
+}
+
+.cv__file--from {
+  inset-inline-start: var(--cv-back-x);
+  inset-block-start: var(--cv-back-y);
+  background: var(--sa-chip);
+  transform: rotate(var(--cv-tilt-back));
+}
+
+.cv__file--to {
+  inset-inline-start: var(--cv-front-x);
+  inset-block-start: var(--cv-front-y);
+  background: var(--sa-surface);
+  transform: rotate(var(--cv-tilt-front));
+}
+
+/* the glyph area: a waveform, a photo or the lines of a page */
+.cv__glyph {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 100%;
+  block-size: var(--cv-glyph-h);
+}
+
+.cv__wave {
+  gap: var(--cv-bar-gap);
+}
+
+.cv__wave i {
+  inline-size: var(--cv-bar-w);
+  block-size: var(--h);
+  border-radius: var(--sa-radius-round);
+  background: var(--sa-faint);
+}
+
+.cv__file--to .cv__wave i {
+  background: var(--sa-sky);
+}
+
+.cv__photo {
+  border-radius: var(--cv-photo-r);
+  background: linear-gradient(135deg, var(--cv-photo-a), var(--cv-photo-b) 45%, var(--cv-photo-c));
+}
+
+.cv__file--from .cv__photo {
+  opacity: 0.55;
+}
+
+.cv__lines {
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: var(--cv-bar-gap);
+}
+
+.cv__lines i {
+  inline-size: var(--h);
+  block-size: var(--cv-line-h);
+  border-radius: var(--sa-radius-round);
+  background: var(--sa-faint);
+}
+
+/* the converted page: a real heading, formatted text */
+.cv__file--to .cv__lines i {
+  background: var(--sa-chip);
+}
+
+.cv__file--to .cv__lines i:first-child {
+  block-size: var(--cv-head-h);
+  background: var(--sa-sky);
+}
+
+/* the chips under an illustration don't need the space they keep for a card without one */
+.sa-card .cv {
+  margin-block-end: var(--sa-space-4);
+}
+
+.sa-card .cv + .sa-chips {
+  min-block-size: 0;
+  margin-block-end: var(--sa-space-6);
 }

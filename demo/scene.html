@@ -1,0 +1,286 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>Convert demo</title>
+<style>
+  :root { --sky: #2fa8ff; }
+  html, body { margin: 0; width: 1920px; height: 1080px; overflow: hidden; background: #070d1c; }
+  #viewport { position: absolute; inset: 0; overflow: hidden; }
+  #world { position: absolute; left: 0; top: 0; width: 1600px; height: 900px; transform-origin: 0 0; will-change: transform; }
+
+  /* Everything inside the world is in macOS points; the camera scales it. */
+  .bg {
+    position: absolute; left: -600px; top: -400px; width: 2800px; height: 1700px;
+    background:
+      radial-gradient(60% 55% at 50% 100%, rgba(47,168,255,0.55) 0%, rgba(47,168,255,0.0) 70%),
+      radial-gradient(45% 40% at 15% 0%, rgba(120,190,255,0.18) 0%, rgba(120,190,255,0) 70%),
+      linear-gradient(170deg, #0b1630 0%, #0c1d45 55%, #103a7a 100%);
+  }
+  /* Light variant for the website hero: the page's sky, not the night sky. */
+  html.light, html.light body { background: #eef7ff; }
+  html.light .bg {
+    background:
+      radial-gradient(62% 58% at 50% 100%, rgba(47,168,255,0.62) 0%, rgba(47,168,255,0) 72%),
+      linear-gradient(180deg, #f6fbff 0%, #e2f1ff 55%, #b9e0ff 100%);
+  }
+  html.light .shadow { filter: drop-shadow(0 26px 38px rgba(10,40,80,0.28)) drop-shadow(0 3px 8px rgba(10,40,80,0.18)); }
+  .win { position: absolute; display: block; }
+  .shadow { filter: drop-shadow(0 22px 34px rgba(0,0,0,0.5)) drop-shadow(0 2px 6px rgba(0,0,0,0.35)); }
+  .layer { position: absolute; left: 0; top: 0; width: 100%; height: 100%; opacity: 0; }
+  .layer img { width: 100%; height: 100%; display: block; }
+
+  /* Menus: region captures with an 8pt margin, clipped to the menu shape. */
+  /* Menus: transparent mattes (white/black difference) over a live blur of the scene, like macOS. */
+  .menu { position: absolute; overflow: hidden; border-radius: 12px; opacity: 0;
+          -webkit-backdrop-filter: blur(22px) saturate(1.8); backdrop-filter: blur(22px) saturate(1.8);
+          box-shadow: 0 16px 36px rgba(0,0,0,0.35), 0 2px 8px rgba(0,0,0,0.25); }
+  .menu img { position: absolute; left: -8px; top: -8px; }
+
+  .patch { position: absolute; background-repeat: no-repeat; }
+  .bar-track { position: absolute; border-radius: 4px; background: #3b3b3b; }
+  .bar-fill { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 4px; background: #66b6f9; }
+
+  #cursor { position: absolute; left: 0; top: 0; width: 20px; height: 29px; transform-origin: 2px 2px;
+            filter: drop-shadow(0 1.2px 1.6px rgba(0,0,0,0.45)); }
+  #ring { position: absolute; width: 40px; height: 40px; margin: -20px 0 0 -20px; border-radius: 50%;
+          border: 2px solid rgba(255,255,255,0.9); opacity: 0; }
+
+  #end { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
+         font-family: -apple-system, "SF Pro Display", "Helvetica Neue", sans-serif; color: #fff; opacity: 0; }
+  #end img { width: 168px; height: 168px; }
+  #end h1 { margin: 18px 0 0; font-size: 84px; font-weight: 600; letter-spacing: -0.03em; }
+  #end p { margin: 10px 0 0; font-size: 32px; color: rgba(255,255,255,0.72); letter-spacing: -0.01em; }
+  #end .url { margin-top: 26px; font-size: 26px; color: #8fd0ff; }
+  #end > * { will-change: transform, opacity; }
+</style>
+</head>
+<body>
+<div id="viewport">
+  <div id="world">
+    <div class="bg"></div>
+
+    <!-- Finder window: 880 x 360 pt -->
+    <div id="finder" class="win shadow" style="left:360px; top:250px; width:880px; height:360px;">
+      <div class="layer" data-k="none"><img src="captures/finder-none-active.png"></div>
+      <div class="layer" data-k="opus"><img src="captures/finder-opus-active.png"></div>
+      <div class="layer" data-k="idle"><img src="captures/finder-opus.png"></div>
+      <div class="layer" data-k="mp3"><img src="captures/finder-mp3.png"></div>
+    </div>
+
+    <!-- Context menu (252 x 437) and Quick Actions submenu (126 x 69), placed relative to Finder -->
+    <div id="menu" class="menu" style="left:539px; top:338px; width:252px; height:437px;">
+      <img id="menuImg" src="captures/matte/menu-main.png" width="268" height="453">
+    </div>
+    <div id="sub" class="menu" style="left:786px; top:706px; width:126px; height:69px;">
+      <img id="subImg" src="captures/matte/qa-1.png" width="142" height="85">
+    </div>
+
+    <!-- Convert panel: 460 pt wide; height changes with state -->
+    <div id="panel" class="win shadow" style="left:570px; top:300px; width:460px; height:317px; opacity:0;">
+      <img id="panelImg" src="captures/panel-idle.png" style="width:460px; display:block;">
+      <!-- running state: keep the demo file's header (the long test file showed another size) -->
+      <div id="headerPatch" class="patch" style="left:0; top:45px; width:460px; height:55px; display:none;
+           background-image:url(captures/panel-320.png); background-size:460px 317px; background-position:0 -45px;"></div>
+      <div id="bar" class="bar-track" style="left:20px; top:279px; width:420px; height:8px; display:none;">
+        <div id="barFill" class="bar-fill" style="width:0"></div>
+      </div>
+    </div>
+    <div id="bitrate" class="menu" style="left:694px; top:443px; width:193px; height:202px;">
+      <img id="bitrateImg" src="captures/matte/bitrate-menu.png" width="209" height="218">
+    </div>
+
+    <div id="ring"></div>
+    <svg id="cursor" viewBox="0 0 20 29">
+      <path d="M2 2 L2 23 L7.1 18.2 L10.6 26.2 L14 24.7 L10.6 16.9 L17.4 16.9 Z"
+            fill="#000" stroke="#fff" stroke-width="1.7" stroke-linejoin="round"/>
+    </svg>
+  </div>
+
+  <div id="end">
+    <img src="../docs/icon.png" alt="">
+    <h1>Convert</h1>
+    <p>Right-click any file. Convert it on your Mac.</p>
+    <div class="url">convert.newtonbuilds.dev</div>
+  </div>
+</div>
+
+<script>
+// ---------- easing ----------
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const sig = x => 1 / (1 + Math.exp(-x));
+function logistic(p, k = 10) {           // S-curve: soft ends, steady middle
+  const a = sig(-k / 2), b = sig(k / 2);
+  return (sig(k * (clamp(p) - 0.5)) - a) / (b - a);
+}
+const inOutCubic = p => (p = clamp(p)) < 0.5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2;
+const outExpo = p => (p = clamp(p)) >= 1 ? 1 : 1 - Math.pow(2, -10 * p);
+const inOutSine = p => -(Math.cos(Math.PI * clamp(p)) - 1) / 2;
+const lerp = (a, b, p) => a + (b - a) * p;
+
+// ---------- layout (stage points) ----------
+const F = { x: 360, y: 250 };           // Finder origin
+const P = { x: 570, y: 300 };           // panel origin
+const pt = {
+  start:     { x: 1330, y: 860 },
+  opus:      { x: F.x + 177, y: F.y + 94 },
+  quick:     { x: F.x + 245, y: F.y + 473 },
+  quickEdge: { x: F.x + 420, y: F.y + 474 },
+  convert:   { x: F.x + 482, y: F.y + 474 },
+  bitrate:   { x: P.x + 236, y: P.y + 160 },
+  k320:      { x: P.x + 182, y: P.y + 188 },
+  idleSpot:  { x: P.x + 330, y: P.y + 238 },
+  convertBtn:{ x: P.x + 404, y: P.y + 285 },
+  showBtn:   { x: P.x + 316, y: P.y + 309 },
+  mp3:       { x: F.x + 640, y: F.y + 150 },
+  rest:      { x: F.x + 720, y: F.y + 300 },
+};
+
+// ---------- timeline ----------
+// Cursor moves: [start, duration, to, arc]
+const moves = [
+  [0.45, 1.05, pt.opus, 60],
+  [2.10, 0.55, pt.quick, -14],
+  [2.85, 0.28, pt.quickEdge, 0],
+  [3.13, 0.18, pt.convert, 0],
+  [4.85, 0.70, pt.bitrate, 40],
+  [6.15, 0.42, pt.k320, -10],
+  [7.35, 0.70, pt.convertBtn, -30],
+  [8.45, 0.90, pt.idleSpot, 20],
+  [10.05, 0.55, pt.showBtn, 20],
+  [11.30, 1.20, pt.rest, 30],
+];
+const clicks = [1.60, 1.90, 3.55, 5.70, 6.75, 8.20, 10.80];
+
+// Camera keys: [start, duration, cx, cy, zoom]
+const cams = [
+  [0.55, 1.65, 712, 520, 1.38],
+  [3.70, 1.20, 800, 468, 1.50],
+  [5.15, 0.95, 790, 492, 1.62],
+  [6.95, 0.95, 800, 468, 1.50],
+  [10.95, 1.20, 905, 430, 1.34],
+  [12.55, 1.20, 800, 450, 1.00],
+];
+const cam0 = [800, 450, 1.0];
+const S = 1.2;                           // px per pt at zoom 1
+
+function cameraAt(t) {
+  let [cx, cy, z] = cam0;
+  for (const [s, d, x, y, zz] of cams) {
+    const p = logistic((t - s) / d, 10);
+    if (t < s) break;
+    cx = lerp(cx, x, p); cy = lerp(cy, y, p); z = lerp(z, zz, p);
+  }
+  return { cx, cy, z };
+}
+
+function cursorAt(t) {
+  let pos = { ...pt.start };
+  for (const [s, d, to, arc] of moves) {
+    if (t < s) break;
+    const p = inOutCubic((t - s) / d);
+    const from = { ...pos };
+    const dx = to.x - from.x, dy = to.y - from.y, len = Math.hypot(dx, dy) || 1;
+    const bend = Math.sin(Math.PI * p) * arc;            // gentle arc, not a ruler line
+    pos = { x: lerp(from.x, to.x, p) - dy / len * bend, y: lerp(from.y, to.y, p) + dx / len * bend };
+  }
+  return pos;
+}
+
+function pressAt(t) {                     // 0..1 how pressed the cursor is
+  let v = 0;
+  for (const c of clicks) {
+    const d = t - c;
+    if (d > -0.09 && d < 0.16) v = Math.max(v, d < 0 ? 1 + d / 0.09 : 1 - d / 0.16);
+  }
+  return clamp(v);
+}
+
+const Q = new URLSearchParams(location.search);
+const LOOP = Q.has('loop');                 // website hero: no end card, seamless loop
+if (Q.get('bg') === 'light') document.documentElement.classList.add('light');
+const $ = id => document.getElementById(id);
+const layers = [...document.querySelectorAll('#finder .layer')];
+function showFinder(states) {               // {none: a, opus: b, mp3: c}
+  for (const l of layers) l.style.opacity = states[l.dataset.k] ?? 0;
+}
+function setSrc(img, src) { if (!img.src.endsWith(src)) img.src = src; }
+
+window.render = function (t) {
+  // Camera
+  const { cx, cy, z } = cameraAt(t);
+  const sc = S * z;
+  $('world').style.transform = `translate(${960 - cx * sc}px, ${540 - cy * sc}px) scale(${sc})`;
+
+  // Finder states
+  // Finder goes inactive (grey selection) while the Convert window is in front.
+  if (t < 1.62) showFinder({ none: 1 });
+  else if (t < 3.80) showFinder({ opus: 1 });
+  else if (t < 10.95) { const p = clamp((t - 3.80) / 0.12); showFinder({ opus: 1 - p, idle: p }); }
+  else if (!LOOP || t < 13.9) { const p = clamp((t - 10.95) / 0.35); showFinder({ idle: 1 - p, mp3: p }); }
+  else { const q = inOutSine((t - 13.9) / 0.5); showFinder({ mp3: 1 - q, none: q }); }   // back to the first frame
+
+  // Context menu: opens on the right-click, Quick Actions highlights, submenu, Convert… highlights, closes
+  const menuOpen = t >= 1.92 && t < 3.62;
+  const menuFade = t < 3.62 ? clamp((t - 1.92) / 0.09) : clamp(1 - (t - 3.62) / 0.16);
+  $('menu').style.opacity = t >= 1.92 ? menuFade : 0;
+  setSrc($('menuImg'), t >= 2.62 ? (t >= 3.27 ? 'captures/matte/qa-2-hover.png' : 'captures/matte/qa-2.png') : 'captures/matte/menu-main.png');
+  const subOn = t >= 2.72;
+  $('sub').style.opacity = subOn ? (t < 3.62 ? clamp((t - 2.72) / 0.08) : menuFade) : 0;
+  setSrc($('subImg'), t >= 3.27 ? 'captures/matte/qa-1-hover.png' : 'captures/matte/qa-1.png');
+
+  // Panel: appears after Convert…, closes on Show in Finder
+  let pOp = 0, pSc = 1;
+  if (t >= 3.80 && t < 10.92) { const p = outExpo((t - 3.80) / 0.42); pOp = clamp((t - 3.80) / 0.16); pSc = lerp(0.94, 1, p); }
+  else if (t >= 10.92) { const p = clamp((t - 10.92) / 0.2); pOp = 1 - p; pSc = lerp(1, 0.97, p); }
+  $('panel').style.opacity = pOp;
+  $('panel').style.transform = `scale(${pSc})`;
+  $('panel').style.transformOrigin = '50% 40%';
+
+  let img = 'captures/panel-idle.png', h = 317;
+  if (t >= 6.80) img = 'captures/panel-320.png';
+  if (t >= 8.25) { img = 'captures/panel-running.png'; h = 345; }
+  if (t >= 9.95) { img = 'captures/panel-done.png'; h = 341; }
+  setSrc($('panelImg'), img);
+  $('panel').style.height = h + 'px';
+  const running = t >= 8.25 && t < 9.95;
+  $('headerPatch').style.display = running ? 'block' : 'none';
+  $('bar').style.display = running ? 'block' : 'none';
+  $('barFill').style.width = (inOutSine((t - 8.3) / 1.55) * 100).toFixed(3) + '%';
+
+  // Bitrate menu
+  const bOpen = t >= 5.72 && t < 6.95;
+  $('bitrate').style.opacity = t >= 5.72 ? (t < 6.80 ? clamp((t - 5.72) / 0.09) : clamp(1 - (t - 6.80) / 0.14)) : 0;
+  setSrc($('bitrateImg'), t >= 6.50 ? 'captures/matte/bitrate-menu-hover.png' : 'captures/matte/bitrate-menu.png');
+
+  // Cursor
+  const c = cursorAt(t);
+  const press = pressAt(t);
+  const cursorScale = 1.25 * (1 - 0.12 * press) / Math.sqrt(z);   // a touch larger than life, steady on screen
+  $('cursor').style.transform = `translate(${c.x - 2}px, ${c.y - 2}px) scale(${cursorScale})`;
+  $('cursor').style.opacity = (LOOP ? clamp(t / 0.35) : 1) * (t < 12.4 ? 1 : clamp(1 - (t - 12.4) / 0.4));
+
+  // Click ring
+  let ring = 0, rs = 0.3;
+  for (const ck of clicks) { const d = t - ck; if (d >= 0 && d < 0.42) { const p = outExpo(d / 0.42); ring = 0.32 * (1 - d / 0.42); rs = lerp(0.3, 1, p); } }
+  $('ring').style.opacity = ring;
+  $('ring').style.transform = `translate(${c.x}px, ${c.y}px) scale(${rs / Math.sqrt(z)})`;
+
+  // End card
+  const e = LOOP ? 0 : clamp((t - 13.55) / 0.6);
+  $('viewport').querySelector('#world').style.opacity = 1 - 0.85 * e;
+  $('world').style.filter = e > 0 ? `blur(${(e * 14).toFixed(2)}px)` : 'none';
+  $('end').style.opacity = e;
+  [...$('end').children].forEach((el, i) => {
+    const p = outExpo((t - 13.65 - i * 0.09) / 0.9);
+    el.style.opacity = clamp((t - 13.65 - i * 0.09) / 0.35);
+    el.style.transform = `translateY(${(1 - p) * 26}px)`;
+  });
+};
+
+window.DURATION = LOOP ? 14.8 : 16.2;
+window.ready = Promise.all([...document.images].map(i => i.decode().catch(() => {})));
+render(0);
+</script>
+</body>
+</html>

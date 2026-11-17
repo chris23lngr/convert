@@ -1,0 +1,13 @@
+Demo/
+captures/
+frames/
+out/
+node_modules/
+backdrop
+matte
+winid
+*.swift.bak
+scene_v*_backup.html
+Long/
+backdrop.pid
+Interview.mp3.bak

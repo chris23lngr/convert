@@ -16,6 +16,11 @@
   <link rel="stylesheet" href="saas/components/index.css" />
   <link rel="stylesheet" href="site.css" />
   <script src="saas/js/motion.js" defer></script>
+  <script>
+    addEventListener('DOMContentLoaded', () => {
+      if (matchMedia('(prefers-reduced-motion: reduce)').matches) document.querySelectorAll('video[autoplay]').forEach(v => { v.removeAttribute('autoplay'); v.pause(); });
+    });
+  </script>
 </head>
 <body>
   <a class="sa-skip" href="#main">Skip to content</a>
@@ -44,36 +49,9 @@
       </div>
 
       <div class="sa-hero__product sa-rise" style="--i: 3">
-        <div class="sa-window" role="img" aria-label="Convert working through five files: a recording to MP3, a film to HEVC, a photo to JPEG, Markdown notes to PDF and a scanned PDF to PNG pages">
-          <div class="sa-window__bar"><span></span><span></span><span></span></div>
-          <div class="sa-window__body">
-            <ul class="sa-window__side">
-              <li class="sa-window__item" aria-current="page">All files</li>
-              <li class="sa-window__item">Audio</li>
-              <li class="sa-window__item">Video</li>
-              <li class="sa-window__item">Images</li>
-              <li class="sa-window__item">Documents</li>
-            </ul>
-            <div class="sa-window__main">
-              <div class="sa-stats">
-                <div class="sa-stat"><p class="sa-meta">Files in this batch</p><p class="sa-stat__value sa-num">5</p></div>
-                <div class="sa-stat"><p class="sa-meta">Formats to pick from</p><p class="sa-stat__value sa-num">39</p></div>
-                <div class="sa-stat"><p class="sa-meta">Uploaded</p><p class="sa-stat__value sa-num">0 bytes</p></div>
-              </div>
-              <table class="sa-table">
-                <thead>
-                  <tr><th>File</th><th>Convert to</th><th class="sa-table__wide">Settings</th><th>Status</th></tr>
-                </thead>
-                <tbody>
-                  <tr><td>Interview.opus</td><td>MP3</td><td class="sa-table__quiet sa-table__wide">320 kbps</td><td><span class="sa-badge sa-badge--ok">Done</span></td></tr>
-                  <tr><td>Launch film.mov</td><td>MP4 (HEVC)</td><td class="sa-table__quiet sa-table__wide">1080p, hardware</td><td><span class="sa-badge sa-badge--ok">Done</span></td></tr>
-                  <tr><td>IMG_2041.heic</td><td>JPEG</td><td class="sa-table__quiet sa-table__wide">85%, 2048 px</td><td><span class="sa-badge sa-badge--ok">Done</span></td></tr>
-                  <tr><td>Notes.md</td><td>PDF</td><td class="sa-table__quiet sa-table__wide">A4</td><td><span class="sa-badge sa-badge--sky">Converting</span></td></tr>
-                  <tr><td>Scan.pdf</td><td>PNG pages</td><td class="sa-table__quiet sa-table__wide">150 dpi</td><td><span class="sa-badge">Waiting</span></td></tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
+        <div class="sa-window">
+          <video class="sa-window__shot" src="demo.mp4" poster="demo-poster.jpg" autoplay muted loop playsinline preload="auto"
+                 aria-label="Right-clicking Interview.opus in Finder, choosing Quick Actions, Convert, picking MP3 at 320 kbps and converting it"></video>
         </div>
       </div>
     </section>
@@ -82,6 +60,10 @@
       <h2 class="sa-display" id="formats-title" data-reveal>Every format, one right-click.</h2>
       <ul class="sa-section__body sa-cards sa-cards--3" data-reveal-group>
         <li class="sa-card">
+          <div class="cv" aria-hidden="true">
+            <div class="cv__file cv__file--from"><span class="cv__glyph cv__wave"><i style="--h: 40%"></i><i style="--h: 85%"></i><i style="--h: 60%"></i><i style="--h: 100%"></i><i style="--h: 50%"></i><i style="--h: 70%"></i></span><span class="sa-badge">OPUS</span></div>
+            <div class="cv__file cv__file--to"><span class="cv__glyph cv__wave"><i style="--h: 40%"></i><i style="--h: 85%"></i><i style="--h: 60%"></i><i style="--h: 100%"></i><i style="--h: 50%"></i><i style="--h: 70%"></i></span><span class="sa-badge sa-badge--sky">MP3</span></div>
+          </div>
           <div class="sa-chips">
             <span class="sa-chip">Interview.opus</span>
             <span class="sa-chip sa-chip--sky">MP3, 320 kbps</span>
@@ -90,6 +72,10 @@
           <p class="sa-text">MP3, WAV, FLAC, HEVC, ProRes, WebM and GIF, encoded on your Mac’s own hardware.</p>
         </li>
         <li class="sa-card">
+          <div class="cv" aria-hidden="true">
+            <div class="cv__file cv__file--from"><span class="cv__glyph cv__photo"></span><span class="sa-badge">HEIC</span></div>
+            <div class="cv__file cv__file--to"><span class="cv__glyph cv__photo"></span><span class="sa-badge sa-badge--sky">JPEG</span></div>
+          </div>
           <div class="sa-chips">
             <span class="sa-chip">IMG_2041.heic</span>
             <span class="sa-chip sa-chip--sky">JPEG, 85%</span>
@@ -98,6 +84,10 @@
           <p class="sa-text">HEIC, AVIF, WebP, PNG and JPEG, resized and compressed the way you set.</p>
         </li>
         <li class="sa-card">
+          <div class="cv" aria-hidden="true">
+            <div class="cv__file cv__file--from"><span class="cv__glyph cv__lines"><i style="--h: 70%"></i><i style="--h: 100%"></i><i style="--h: 85%"></i><i style="--h: 55%"></i></span><span class="sa-badge">MD</span></div>
+            <div class="cv__file cv__file--to"><span class="cv__glyph cv__lines"><i style="--h: 70%"></i><i style="--h: 100%"></i><i style="--h: 85%"></i><i style="--h: 55%"></i></span><span class="sa-badge sa-badge--sky">PDF</span></div>
+          </div>
           <div class="sa-chips">
             <span class="sa-chip">Notes.md</span>
             <span class="sa-chip sa-chip--sky">PDF, A4</span>
