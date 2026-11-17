@@ -1,0 +1,11 @@
+/* Convert site: the app icon in the wordmark. Tokens only. */
+.mark {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sa-mark-gap);
+}
+
+.mark img {
+  inline-size: var(--sa-mark);
+  block-size: var(--sa-mark);
+}

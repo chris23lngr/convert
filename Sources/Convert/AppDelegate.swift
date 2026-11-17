@@ -64,6 +64,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         if panel.runModal() == .OK { openPanel(panel.urls) }
     }
 
+    @objc func showAbout(_ sender: Any?) {
+        let credits = NSMutableAttributedString(
+            string: "Convert any file on your Mac, locally.\nVibe coded, open source (MIT).\n",
+            attributes: [.font: NSFont.systemFont(ofSize: 11), .foregroundColor: NSColor.secondaryLabelColor])
+        credits.append(NSAttributedString(string: "convert.newtonbuilds.dev", attributes: [
+            .font: NSFont.systemFont(ofSize: 11),
+            .link: URL(string: "https://convert.newtonbuilds.dev")!,
+        ]))
+        let centered = NSMutableParagraphStyle()
+        centered.alignment = .center
+        credits.addAttribute(.paragraphStyle, value: centered, range: NSRange(location: 0, length: credits.length))
+        NSApp.orderFrontStandardAboutPanel(options: [.credits: credits])
+        NSApp.activate()
+    }
+
     @objc func installQuickAction(_ sender: Any?) {
         do {
             try QuickAction.install()
@@ -100,7 +115,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 
         let appItem = NSMenuItem()
         let appMenu = NSMenu()
-        appMenu.addItem(withTitle: "About Convert", action: #selector(NSApplication.orderFrontStandardAboutPanel(_:)), keyEquivalent: "")
+        appMenu.addItem(withTitle: "About Convert", action: #selector(showAbout(_:)), keyEquivalent: "")
         appMenu.addItem(.separator())
         appMenu.addItem(withTitle: "Install Finder Quick Action", action: #selector(installQuickAction(_:)), keyEquivalent: "")
         appMenu.addItem(withTitle: "Remove Finder Quick Action", action: #selector(removeQuickAction(_:)), keyEquivalent: "")

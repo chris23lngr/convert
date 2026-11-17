@@ -1,8 +1,23 @@
-# Convert
+<p align="center">
+  <img src="docs/icon.png" width="128" height="128" alt="Convert app icon" />
+</p>
 
-**Like CloudConvert, but on your Mac.** Right-click a file in Finder, pick a format, done. Nothing gets uploaded; every conversion runs locally on your machine.
+<h1 align="center">Convert</h1>
 
-![The Convert panel](docs/screenshot.png)
+<p align="center">
+  <strong>Like CloudConvert, but on your Mac.</strong><br />
+  Right-click a file in Finder, pick a format, done. Nothing gets uploaded; every conversion runs locally on your machine.
+</p>
+
+<p align="center">
+  <a href="https://github.com/eliasdesena/convert/releases/latest/download/Convert.zip"><strong>Download for Mac</strong></a>
+  &nbsp;·&nbsp;
+  <a href="https://convert.newtonbuilds.dev">Website</a>
+</p>
+
+<p align="center">
+  <img src="docs/screenshot.png" width="460" alt="The Convert panel converting an Opus file to MP3" />
+</p>
 
 > [!NOTE]
 > **This app is vibe coded.** It was built in an afternoon by chatting with an AI coding assistant (Claude), then tested by converting a pile of sample files. It works on my machine and the code is small enough to read, but it hasn't been battle-tested or reviewed by anyone. Keep your originals (Convert never overwrites them anyway), and please [open an issue](../../issues) if something breaks.
@@ -93,20 +108,20 @@ Convert has no network code, no analytics and no accounts. It reads the files yo
 
 ## Known limitations
 
-- **Markdown** is converted as plain text, so `# headings` and `**bold**` aren't formatted.
+- **Markdown** covers the common syntax (headings, bold, italic, lists, task lists, tables, code, quotes, links). Footnotes, HTML inside Markdown and images aren't rendered.
 - **Excel and PowerPoint** files aren't supported (they'd need LibreOffice).
 - **Converting images** keeps only the first frame of an animated GIF or a multi-image HEIC.
 - The **downloaded** app isn't notarized by Apple (see the install notes above).
 
 ## How it works (for the curious)
 
-It's a small SwiftUI app (~1,500 lines) with no dependencies beyond what's on your Mac:
+It's a small SwiftUI app (~1,800 lines) with no dependencies beyond what's on your Mac:
 
 | Kind | Engine |
 |---|---|
 | Audio & video | `ffmpeg`, using Apple's hardware encoders (VideoToolbox) for H.264, HEVC and ProRes |
 | Images | Apple's ImageIO (plus `cwebp` for WebP) |
-| Documents | macOS's built-in `textutil`, and AppKit's text system for PDF output |
+| Documents | macOS's built-in `textutil`, a small built-in Markdown renderer, and AppKit's text system for PDF output |
 | PDF | Core Graphics and PDFKit |
 
 The Finder menu item is a tiny Automator Quick Action (`~/Library/Services/Convert.workflow`) that runs `open -b local.convert.app <files>`.
@@ -117,6 +132,7 @@ The Finder menu item is a tiny Automator Quick Action (`~/Library/Services/Conve
 | `Sources/Convert/FFmpeg.swift` | ffmpeg arguments for each audio/video format |
 | `Sources/Convert/ImageConv.swift` | Image conversion |
 | `Sources/Convert/DocConv.swift` | Document conversion, document → PDF, PDF → images/text |
+| `Sources/Convert/Markdown.swift` | Markdown → HTML |
 | `Sources/Convert/ConvertModel.swift`, `ContentView.swift` | The window and its state |
 | `Sources/Convert/QuickAction.swift` | Installs/removes the Finder Quick Action |
 
@@ -126,6 +142,14 @@ The Finder menu item is a tiny Automator Quick Action (`~/Library/Services/Conve
 build/Convert.app/Contents/MacOS/Convert --cli mp3 song.opus
 build/Convert.app/Contents/MacOS/Convert --cli        # lists all format IDs
 ```
+
+### The icon
+
+`tools/make_icon.swift` draws the icon with SwiftUI; `build.sh` turns it into `AppIcon.icns` when that file is missing.
+
+### The website
+
+`site/` is the landing page at [convert.newtonbuilds.dev](https://convert.newtonbuilds.dev). Its stylesheet pack (`site/saas/`) isn't part of this repo.
 
 ### Making a release
 

@@ -4,6 +4,11 @@ import UniformTypeIdentifiers
 
 private let labelWidth: CGFloat = 104
 
+enum Brand {
+    /// The one brand colour, shared with the icon and the website.
+    static let sky = Color(red: 0.18, green: 0.66, blue: 1.0)
+}
+
 extension Notification.Name {
     static let quickActionChanged = Notification.Name("ConvertQuickActionChanged")
 }
@@ -35,7 +40,8 @@ struct ContentView: View {
         }
         .padding(20)
         .frame(width: 460)
-        .background(dropTargeted ? Color.accentColor.opacity(0.08) : .clear)
+        .tint(Brand.sky)
+        .background(dropTargeted ? Brand.sky.opacity(0.08) : .clear)
         .onDrop(of: [.fileURL], isTargeted: $dropTargeted) { providers in
             for provider in providers {
                 _ = provider.loadObject(ofClass: URL.self) { url, _ in
@@ -51,11 +57,17 @@ struct ContentView: View {
 
     private var header: some View {
         HStack(spacing: 12) {
-            Image(systemName: model.primaryKind?.symbol ?? "arrow.triangle.2.circlepath")
-                .font(.system(size: 24, weight: .regular))
-                .foregroundStyle(Color.accentColor)
-                .frame(width: 40, height: 40)
-                .background(Color.accentColor.opacity(0.12), in: RoundedRectangle(cornerRadius: 9))
+            if let kind = model.primaryKind {
+                Image(systemName: kind.symbol)
+                    .font(.system(size: 24, weight: .regular))
+                    .foregroundStyle(Brand.sky)
+                    .frame(width: 40, height: 40)
+                    .background(Brand.sky.opacity(0.12), in: RoundedRectangle(cornerRadius: 9, style: .continuous))
+            } else {
+                Image(nsImage: NSApp.applicationIconImage)
+                    .resizable()
+                    .frame(width: 44, height: 44)
+            }
             VStack(alignment: .leading, spacing: 2) {
                 Text(title).font(.headline).lineLimit(1).truncationMode(.middle)
                 Text(subtitle).font(.caption).foregroundStyle(.secondary).lineLimit(2).truncationMode(.middle)
@@ -99,11 +111,11 @@ struct ContentView: View {
             .frame(maxWidth: .infinity)
             .padding(.vertical, 28)
             .background(RoundedRectangle(cornerRadius: 12).strokeBorder(style: StrokeStyle(lineWidth: 1.5, dash: [6]))
-                .foregroundStyle(dropTargeted ? Color.accentColor : Color.secondary.opacity(0.4)))
+                .foregroundStyle(dropTargeted ? Brand.sky : Color.secondary.opacity(0.4)))
 
             if !quickActionInstalled {
                 HStack(spacing: 10) {
-                    Image(systemName: "contextualmenu.and.cursorarrow").foregroundStyle(Color.accentColor)
+                    Image(systemName: "contextualmenu.and.cursorarrow").foregroundStyle(Brand.sky)
                     Text("Add “Convert…” to Finder’s right-click menu").font(.callout)
                     Spacer()
                     Button("Install") {
@@ -111,7 +123,7 @@ struct ContentView: View {
                     }
                 }
                 .padding(10)
-                .background(Color.accentColor.opacity(0.08), in: RoundedRectangle(cornerRadius: 9))
+                .background(Brand.sky.opacity(0.08), in: RoundedRectangle(cornerRadius: 9))
             }
         }
         .onReceive(NotificationCenter.default.publisher(for: .quickActionChanged)) { _ in

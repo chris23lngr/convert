@@ -4,7 +4,8 @@ import Foundation
 import PDFKit
 
 enum DocConv {
-    /// Formats macOS's textutil reads natively; anything else (Markdown, source code…) goes in as plain text.
+    /// Formats macOS's textutil reads natively; Markdown is rendered to HTML first,
+    /// anything else (source code, logs…) goes in as plain text.
     static let textutilInputs: Set<String> = ["txt", "text", "rtf", "rtfd", "html", "htm", "doc", "docx", "odt", "wordml", "webarchive", "xml"]
 
     static func isPlain(_ url: URL) -> Bool {
@@ -12,21 +13,37 @@ enum DocConv {
         return ext == "txt" || ext == "text" || !textutilInputs.contains(ext)
     }
 
+    /// Markdown becomes a styled HTML file in a temp folder; everything else is used as is.
+    private static func source(for input: URL) throws -> (url: URL, cleanup: () -> Void) {
+        guard Markdown.isMarkdown(input) else { return (input, {}) }
+        let html = try Markdown.renderToTempHTML(input)
+        return (html, { try? FileManager.default.removeItem(at: html.deletingLastPathComponent()) })
+    }
+
     static func textutil(_ input: URL, _ t: Target) throws -> URL {
         let out = uniqueOutput(for: input, ext: t.ext)
+        let src = try source(for: input)
+        defer { src.cleanup() }
+        if Markdown.isMarkdown(input), t.ext == "html" {
+            try FileManager.default.copyItem(at: src.url, to: out)
+            return out
+        }
         var args = ["-convert", t.ext]
-        if !textutilInputs.contains(input.pathExtension.lowercased()) {
+        if !textutilInputs.contains(src.url.pathExtension.lowercased()) {
             args += ["-format", "txt", "-inputencoding", "UTF-8"]
         }
         if t.ext == "txt" || t.ext == "html" { args += ["-encoding", "UTF-8"] }
-        args += ["-output", out.path, input.path]
+        args += ["-output", out.path, src.url.path]
         try runSync("/usr/bin/textutil", args)
         return out
     }
 
     /// Lays the document out on paper and prints it to PDF. Must run on the main thread (AppKit text system).
     @MainActor
-    static func toPDF(_ input: URL, _ out: URL, a4: Bool) throws {
+    static func toPDF(_ original: URL, _ out: URL, a4: Bool) throws {
+        let src = try source(for: original)
+        defer { src.cleanup() }
+        let input = src.url
         var opts: [NSAttributedString.DocumentReadingOptionKey: Any] = [:]
         if isPlain(input) {
             opts[.documentType] = NSAttributedString.DocumentType.plain
