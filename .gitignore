@@ -4,3 +4,6 @@ build/
 
 .vercel
 site/saas/
+
+# One-off demo/trailer tooling and its captures: kept locally, not part of the app
+demo/
