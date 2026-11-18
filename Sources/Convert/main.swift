@@ -9,7 +9,10 @@ func runCLI(_ args: [String]) {
     }
     var settings = ConvSettings()
     if let json = ProcessInfo.processInfo.environment["CONVERT_SETTINGS"],
-       let s = try? JSONDecoder().decode(ConvSettings.self, from: Data(json.utf8)) { settings = s }
+        let s = try? JSONDecoder().decode(ConvSettings.self, from: Data(json.utf8))
+    {
+        settings = s
+    }
     Task {
         var failed = false
         for path in args.dropFirst() {
@@ -18,7 +21,9 @@ func runCLI(_ args: [String]) {
             do {
                 let outs = try await Converter.convert(url, to: target, settings: settings, runner: Runner()) { _ in }
                 let secs = String(format: "%.2fs", Date().timeIntervalSince(start))
-                print("OK   \(url.lastPathComponent) → \(outs.map(\.lastPathComponent).joined(separator: ", ")) (\(secs))")
+                print(
+                    "OK   \(url.lastPathComponent) → \(outs.map(\.lastPathComponent).joined(separator: ", ")) (\(secs))"
+                )
             } catch {
                 failed = true
                 print("FAIL \(url.lastPathComponent): \(error.localizedDescription)")

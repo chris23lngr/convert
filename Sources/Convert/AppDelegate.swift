@@ -27,7 +27,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 
     func openPanel(_ urls: [URL]) {
         // Reuse an empty drop panel if one is open.
-        if !urls.isEmpty, let (win, model) = windows.first(where: { $0.value.files.isEmpty && $0.value.phase == .idle }) {
+        if !urls.isEmpty, let (win, model) = windows.first(where: { $0.value.files.isEmpty && $0.value.phase == .idle })
+        {
             model.add(urls)
             win.makeKeyAndOrderFront(nil)
             NSApp.activate()
@@ -68,10 +69,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         let credits = NSMutableAttributedString(
             string: "Convert any file on your Mac, locally.\nVibe coded, open source (MIT).\n",
             attributes: [.font: NSFont.systemFont(ofSize: 11), .foregroundColor: NSColor.secondaryLabelColor])
-        credits.append(NSAttributedString(string: "convert.newtonbuilds.dev", attributes: [
-            .font: NSFont.systemFont(ofSize: 11),
-            .link: URL(string: "https://convert.newtonbuilds.dev")!,
-        ]))
+        credits.append(
+            NSAttributedString(
+                string: "convert.newtonbuilds.dev",
+                attributes: [
+                    .font: NSFont.systemFont(ofSize: 11),
+                    .link: URL(string: "https://convert.newtonbuilds.dev")!,
+                ]))
         let centered = NSMutableParagraphStyle()
         centered.alignment = .center
         credits.addAttribute(.paragraphStyle, value: centered, range: NSRange(location: 0, length: credits.length))
@@ -82,8 +86,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     @objc func installQuickAction(_ sender: Any?) {
         do {
             try QuickAction.install()
-            alert("Quick Action installed",
-                  "Right-click files in Finder → Quick Actions → Convert…\n\nIf it doesn't show up, enable it in System Settings → General → Login Items & Extensions → Finder.")
+            alert(
+                "Quick Action installed",
+                "Right-click files in Finder → Quick Actions → Convert…\n\nIf it doesn't show up, enable it in System Settings → General → Login Items & Extensions → Finder."
+            )
         } catch {
             alert("Couldn't install the Quick Action", error.localizedDescription)
         }
@@ -91,7 +97,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     }
 
     @objc func removeQuickAction(_ sender: Any?) {
-        do { try QuickAction.uninstall() } catch { alert("Couldn't remove the Quick Action", error.localizedDescription) }
+        do { try QuickAction.uninstall() } catch {
+            alert("Couldn't remove the Quick Action", error.localizedDescription)
+        }
         NotificationCenter.default.post(name: .quickActionChanged, object: nil)
     }
 
@@ -117,8 +125,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         let appMenu = NSMenu()
         appMenu.addItem(withTitle: "About Convert", action: #selector(showAbout(_:)), keyEquivalent: "")
         appMenu.addItem(.separator())
-        appMenu.addItem(withTitle: "Install Finder Quick Action", action: #selector(installQuickAction(_:)), keyEquivalent: "")
-        appMenu.addItem(withTitle: "Remove Finder Quick Action", action: #selector(removeQuickAction(_:)), keyEquivalent: "")
+        appMenu.addItem(
+            withTitle: "Install Finder Quick Action", action: #selector(installQuickAction(_:)), keyEquivalent: "")
+        appMenu.addItem(
+            withTitle: "Remove Finder Quick Action", action: #selector(removeQuickAction(_:)), keyEquivalent: "")
         appMenu.addItem(.separator())
         appMenu.addItem(withTitle: "Hide Convert", action: #selector(NSApplication.hide(_:)), keyEquivalent: "h")
         appMenu.addItem(withTitle: "Quit Convert", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")

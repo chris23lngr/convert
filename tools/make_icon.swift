@@ -4,7 +4,7 @@
 import AppKit
 import SwiftUI
 
-let sky = Color(red: 0.18, green: 0.66, blue: 1.0)        // #2EA8FF, the brand sky
+let sky = Color(red: 0.18, green: 0.66, blue: 1.0)  // #2EA8FF, the brand sky
 let skyLight = Color(red: 0.45, green: 0.80, blue: 1.0)
 let skyDeep = Color(red: 0.07, green: 0.45, blue: 0.96)
 
@@ -25,8 +25,10 @@ struct Icon: View {
                 .overlay(
                     // Soft top sheen
                     RoundedRectangle(cornerRadius: 185, style: .continuous)
-                        .fill(LinearGradient(colors: [.white.opacity(0.28), .white.opacity(0)],
-                                             startPoint: .top, endPoint: .center))
+                        .fill(
+                            LinearGradient(
+                                colors: [.white.opacity(0.28), .white.opacity(0)],
+                                startPoint: .top, endPoint: .center))
                 )
                 .overlay(
                     RoundedRectangle(cornerRadius: 185, style: .continuous)
@@ -47,8 +49,10 @@ struct Icon: View {
                     VStack(spacing: 30) {
                         Image(systemName: "arrow.triangle.2.circlepath")
                             .font(.system(size: 190, weight: .bold))
-                            .foregroundStyle(LinearGradient(colors: [skyLight, skyDeep],
-                                                            startPoint: .topLeading, endPoint: .bottomTrailing))
+                            .foregroundStyle(
+                                LinearGradient(
+                                    colors: [skyLight, skyDeep],
+                                    startPoint: .topLeading, endPoint: .bottomTrailing))
                         VStack(spacing: 18) {
                             Capsule().fill(sky.opacity(0.22)).frame(width: 200, height: 22)
                             Capsule().fill(sky.opacity(0.22)).frame(width: 140, height: 22)

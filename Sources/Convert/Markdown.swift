@@ -76,14 +76,18 @@ enum Markdown {
 
             // Fenced code block
             if trimmed.hasPrefix("```") || trimmed.hasPrefix("~~~") {
-                flushParagraph(); closeLists()
+                flushParagraph()
+                closeLists()
                 let fence = String(trimmed.prefix(3))
                 var code: [String] = []
                 i += 1
                 while i < lines.count, !lines[i].trimmingCharacters(in: .whitespaces).hasPrefix(fence) {
-                    code.append(escape(lines[i])); i += 1
+                    code.append(escape(lines[i]))
+                    i += 1
                 }
-                out.append("<table class=\"code\"><tr><td><pre><code>" + code.joined(separator: "\n") + "</code></pre></td></tr></table>")
+                out.append(
+                    "<table class=\"code\"><tr><td><pre><code>" + code.joined(separator: "\n")
+                        + "</code></pre></td></tr></table>")
                 i += 1
                 continue
             }
@@ -101,7 +105,8 @@ enum Markdown {
 
             // Heading
             if let m = match(#"^(#{1,6})\s+(.*?)\s*#*\s*$"#, trimmed) {
-                flushParagraph(); closeLists()
+                flushParagraph()
+                closeLists()
                 let level = m[1].count
                 out.append("<h\(level)>\(inline(m[2]))</h\(level)>")
                 i += 1
@@ -110,7 +115,8 @@ enum Markdown {
 
             // Horizontal rule
             if match(#"^([-*_])(\s*\1){2,}$"#, trimmed) != nil {
-                flushParagraph(); closeLists()
+                flushParagraph()
+                closeLists()
                 out.append("<hr>")
                 i += 1
                 continue
@@ -118,8 +124,12 @@ enum Markdown {
 
             // Table: header row, then a |---|---| separator
             if trimmed.contains("|"), i + 1 < lines.count,
-               match(#"^\|?\s*:?-{2,}:?\s*(\|\s*:?-{2,}:?\s*)*\|?$"#, lines[i + 1].trimmingCharacters(in: .whitespaces)) != nil {
-                flushParagraph(); closeLists()
+                match(
+                    #"^\|?\s*:?-{2,}:?\s*(\|\s*:?-{2,}:?\s*)*\|?$"#, lines[i + 1].trimmingCharacters(in: .whitespaces))
+                    != nil
+            {
+                flushParagraph()
+                closeLists()
                 var rows = ["<tr>" + cells(trimmed).map { "<th>\(inline($0))</th>" }.joined() + "</tr>"]
                 i += 2
                 while i < lines.count, lines[i].contains("|"), !lines[i].trimmingCharacters(in: .whitespaces).isEmpty {
@@ -132,17 +142,20 @@ enum Markdown {
 
             // Block quote (consecutive "> " lines, rendered recursively)
             if trimmed.hasPrefix(">") {
-                flushParagraph(); closeLists()
+                flushParagraph()
+                closeLists()
                 var quoted: [String] = []
                 while i < lines.count {
                     let t = lines[i].trimmingCharacters(in: .whitespaces)
                     guard t.hasPrefix(">") else { break }
                     var rest = t.dropFirst()
                     if rest.hasPrefix(" ") { rest = rest.dropFirst() }
-                    quoted.append(String(rest)); i += 1
+                    quoted.append(String(rest))
+                    i += 1
                 }
                 // A one-cell table: the AppKit HTML importer ignores block-quote indents but draws table cells.
-                out.append("<table class=\"quote\"><tr><td>" + toHTML(quoted.joined(separator: "\n")) + "</td></tr></table>")
+                out.append(
+                    "<table class=\"quote\"><tr><td>" + toHTML(quoted.joined(separator: "\n")) + "</td></tr></table>")
                 continue
             }
 
@@ -213,7 +226,9 @@ enum Markdown {
         }
         s = escape(s)
         s = replace(#"!\[([^\]]*)\]\(([^)\s]+)(?:\s+&quot;[^&]*&quot;)?\)"#, in: s) { m in m[1] }
-        s = replace(#"\[([^\]]+)\]\(([^)\s]+)(?:\s+&quot;[^&]*&quot;)?\)"#, in: s) { m in "<a href=\"\(m[2])\">\(m[1])</a>" }
+        s = replace(#"\[([^\]]+)\]\(([^)\s]+)(?:\s+&quot;[^&]*&quot;)?\)"#, in: s) { m in
+            "<a href=\"\(m[2])\">\(m[1])</a>"
+        }
         s = replace(#"&lt;(https?://[^\s&]+)&gt;"#, in: s) { m in "<a href=\"\(m[1])\">\(m[1])</a>" }
         s = replace(#"(\*\*|__)(?=\S)(.+?)(?<=\S)\1"#, in: s) { m in "<strong>\(m[2])</strong>" }
         s = replace(#"(?<![\w*])\*(?=\S)(.+?)(?<=\S)\*(?![\w*])"#, in: s) { m in "<em>\(m[1])</em>" }
@@ -234,7 +249,8 @@ enum Markdown {
 
     private static func match(_ pattern: String, _ s: String) -> [String]? {
         guard let re = try? NSRegularExpression(pattern: pattern),
-              let m = re.firstMatch(in: s, range: NSRange(s.startIndex..., in: s)) else { return nil }
+            let m = re.firstMatch(in: s, range: NSRange(s.startIndex..., in: s))
+        else { return nil }
         return (0..<m.numberOfRanges).map { idx in
             Range(m.range(at: idx), in: s).map { String(s[$0]) } ?? ""
         }

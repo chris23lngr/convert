@@ -52,16 +52,25 @@ final class ConvertModel: ObservableObject {
     }
 
     private func reset() {
-        phase = .idle; outputs = []; errors = []; progress = 0; stopped = false; trashed = 0
+        phase = .idle
+        outputs = []
+        errors = []
+        progress = 0
+        stopped = false
+        trashed = 0
     }
 
     private func chooseTarget() {
         let available = groups.flatMap(\.1)
-        guard !available.isEmpty else { targetID = ""; return }
+        guard !available.isEmpty else {
+            targetID = ""
+            return
+        }
         if available.contains(where: { $0.id == targetID }) { return }
         let last = UserDefaults.standard.string(forKey: "lastTarget.\(groupKey)")
         let exts = Set(files.map { $0.pathExtension.lowercased() })
-        targetID = available.first(where: { $0.id == last })?.id
+        targetID =
+            available.first(where: { $0.id == last })?.id
             ?? Targets.preferred(for: kinds, sourceExts: exts, among: available)?.id
             ?? available[0].id
     }
@@ -71,7 +80,10 @@ final class ConvertModel: ObservableObject {
         UserDefaults.standard.set(t.id, forKey: "lastTarget.\(groupKey)")
         var s = ConvSettings()
         if let data = UserDefaults.standard.data(forKey: "settings.\(t.id)"),
-           let saved = try? JSONDecoder().decode(ConvSettings.self, from: data) { s = saved }
+            let saved = try? JSONDecoder().decode(ConvSettings.self, from: data)
+        {
+            s = saved
+        }
         if !t.bitrateOptions.isEmpty, !t.bitrateOptions.contains(s.audioBitrate) { s.audioBitrate = t.defaultBitrate }
         if !t.sampleRates.contains(s.sampleRate) { s.sampleRate = 0 }
         loading = true
@@ -88,7 +100,10 @@ final class ConvertModel: ObservableObject {
         guard let t = target, phase == .idle, !files.isEmpty else { return }
         reset()
         phase = .running
-        let list = files, s = settings, runner = runner, trash = trashOriginals
+        let list = files
+        let s = settings
+        let runner = runner
+        let trash = trashOriginals
         Task {
             let n = Double(list.count)
             for (i, file) in list.enumerated() {
@@ -106,7 +121,8 @@ final class ConvertModel: ObservableObject {
                     outputs += made
                     // Only after a finished, separate output exists on disk; the Trash keeps it recoverable.
                     if trash, !stopped, !made.isEmpty, !made.contains(file),
-                       made.allSatisfy({ FileManager.default.fileExists(atPath: $0.path) }) {
+                        made.allSatisfy({ FileManager.default.fileExists(atPath: $0.path) })
+                    {
                         do {
                             try FileManager.default.trashItem(at: file, resultingItemURL: nil)
                             trashed += 1

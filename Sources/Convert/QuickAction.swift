@@ -27,28 +27,32 @@ enum QuickAction {
 
         let info: [String: Any] = [
             "CFBundleName": "Convert",
-            "NSServices": [[
-                "NSMenuItem": ["default": "Convert…"],
-                "NSMessage": "runWorkflowAsService",
-                "NSRequiredContext": ["NSApplicationIdentifier": "com.apple.finder"],
-                "NSSendFileTypes": fileTypes,
-                "NSIconName": "NSActionTemplate",
-            ]],
+            "NSServices": [
+                [
+                    "NSMenuItem": ["default": "Convert…"],
+                    "NSMessage": "runWorkflowAsService",
+                    "NSRequiredContext": ["NSApplicationIdentifier": "com.apple.finder"],
+                    "NSSendFileTypes": fileTypes,
+                    "NSIconName": "NSActionTemplate",
+                ]
+            ],
         ]
         let uuid = { UUID().uuidString }
         let action: [String: Any] = [
             "AMAccepts": ["Container": "List", "Optional": true, "Types": ["com.apple.cocoa.string"]],
             "AMActionVersion": "2.0.3",
             "AMApplication": ["Automator"],
-            "AMParameterProperties": ["COMMAND_STRING": [:], "CheckedForUserDefaultShell": [:],
-                                      "inputMethod": [:], "shell": [:], "source": [:]],
+            "AMParameterProperties": [
+                "COMMAND_STRING": [:], "CheckedForUserDefaultShell": [:],
+                "inputMethod": [:], "shell": [:], "source": [:],
+            ],
             "AMProvides": ["Container": "List", "Types": ["com.apple.cocoa.string"]],
             "ActionBundlePath": "/System/Library/Automator/Run Shell Script.action",
             "ActionName": "Run Shell Script",
             "ActionParameters": [
                 "COMMAND_STRING": "open -b \(bundleID) \"$@\"\n",
                 "CheckedForUserDefaultShell": true,
-                "inputMethod": 1,            // pass files as arguments
+                "inputMethod": 1,  // pass files as arguments
                 "shell": "/bin/zsh",
                 "source": "",
             ],

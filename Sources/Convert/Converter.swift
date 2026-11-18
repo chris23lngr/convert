@@ -2,8 +2,10 @@ import Foundation
 
 enum Converter {
     /// Converts one file and returns what was written (files, or a folder for multi-page PDFs).
-    static func convert(_ input: URL, to t: Target, settings s: ConvSettings, runner: Runner,
-                        progress: @escaping @Sendable (Double) -> Void) async throws -> [URL] {
+    static func convert(
+        _ input: URL, to t: Target, settings s: ConvSettings, runner: Runner,
+        progress: @escaping @Sendable (Double) -> Void
+    ) async throws -> [URL] {
         switch t.group {
         case .audio, .video:
             guard let ff = Tools.ffmpeg else {

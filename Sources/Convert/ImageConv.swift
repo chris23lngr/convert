@@ -42,7 +42,8 @@ enum ImageConv {
     }
 
     static func write(_ image: CGImage, to out: URL, type: UTType?, label: String, props: [CFString: Any]) throws {
-        guard let type, let dest = CGImageDestinationCreateWithURL(out as CFURL, type.identifier as CFString, 1, nil) else {
+        guard let type, let dest = CGImageDestinationCreateWithURL(out as CFURL, type.identifier as CFString, 1, nil)
+        else {
             throw ConvertError("This Mac can't write \(label)")
         }
         CGImageDestinationAddImage(dest, image, props as CFDictionary)
@@ -80,8 +81,10 @@ enum ImageConv {
 
     static func flattenOnWhite(_ img: CGImage) throws -> CGImage {
         let space = img.colorSpace.flatMap { $0.model == .rgb ? $0 : nil } ?? CGColorSpace(name: CGColorSpace.sRGB)!
-        guard let ctx = CGContext(data: nil, width: img.width, height: img.height, bitsPerComponent: 8,
-                                  bytesPerRow: 0, space: space, bitmapInfo: CGImageAlphaInfo.noneSkipLast.rawValue)
+        guard
+            let ctx = CGContext(
+                data: nil, width: img.width, height: img.height, bitsPerComponent: 8,
+                bytesPerRow: 0, space: space, bitmapInfo: CGImageAlphaInfo.noneSkipLast.rawValue)
         else { throw ConvertError("Couldn't flatten transparency") }
         let rect = CGRect(x: 0, y: 0, width: img.width, height: img.height)
         ctx.setFillColor(CGColor(red: 1, green: 1, blue: 1, alpha: 1))

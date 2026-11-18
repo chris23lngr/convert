@@ -26,10 +26,12 @@ struct ContentView: View {
             if model.files.isEmpty {
                 dropZone
             } else if model.groups.isEmpty {
-                Label("These files can't be converted together. Pick files of one kind (audio, video, images, documents or PDFs).",
-                      systemImage: "exclamationmark.triangle")
-                    .foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
+                Label(
+                    "These files can't be converted together. Pick files of one kind (audio, video, images, documents or PDFs).",
+                    systemImage: "exclamationmark.triangle"
+                )
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
             } else if let target = model.target {
                 FormRow("Convert to") { formatPicker }
                 if target.hasSettings {
@@ -116,8 +118,9 @@ struct ContentView: View {
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 28)
-            .background(RoundedRectangle(cornerRadius: 12).strokeBorder(style: StrokeStyle(lineWidth: 1.5, dash: [6]))
-                .foregroundStyle(dropTargeted ? Brand.sky : Color.secondary.opacity(0.4)))
+            .background(
+                RoundedRectangle(cornerRadius: 12).strokeBorder(style: StrokeStyle(lineWidth: 1.5, dash: [6]))
+                    .foregroundStyle(dropTargeted ? Brand.sky : Color.secondary.opacity(0.4)))
 
             if !quickActionInstalled {
                 HStack(spacing: 10) {
@@ -189,10 +192,14 @@ struct ContentView: View {
                     Label("Needs ffmpeg (brew install ffmpeg)", systemImage: "exclamationmark.triangle")
                         .font(.caption).foregroundStyle(.orange)
                 } else {
-                    Toggle(model.files.count > 1 ? "Move originals to Trash" : "Move original to Trash",
-                           isOn: $model.trashOriginals)
-                        .toggleStyle(.checkbox)
-                        .help("Once a file has converted, its original goes to the Trash. You can still put it back from there.")
+                    Toggle(
+                        model.files.count > 1 ? "Move originals to Trash" : "Move original to Trash",
+                        isOn: $model.trashOriginals
+                    )
+                    .toggleStyle(.checkbox)
+                    .help(
+                        "Once a file has converted, its original goes to the Trash. You can still put it back from there."
+                    )
                 }
                 Spacer()
                 Button("Cancel") { model.onClose() }
@@ -216,14 +223,18 @@ struct ContentView: View {
         case .done:
             VStack(alignment: .leading, spacing: 8) {
                 if !model.outputs.isEmpty {
-                    Label("Converted \(model.outputs.count) \(model.outputs.count == 1 ? "file" : "files")",
-                          systemImage: "checkmark.circle.fill")
-                        .foregroundStyle(.green)
+                    Label(
+                        "Converted \(model.outputs.count) \(model.outputs.count == 1 ? "file" : "files")",
+                        systemImage: "checkmark.circle.fill"
+                    )
+                    .foregroundStyle(.green)
                 }
                 if model.trashed > 0 {
-                    Label("Moved \(model.trashed == 1 ? "the original" : "\(model.trashed) originals") to the Trash",
-                          systemImage: "trash")
-                        .font(.caption).foregroundStyle(.secondary)
+                    Label(
+                        "Moved \(model.trashed == 1 ? "the original" : "\(model.trashed) originals") to the Trash",
+                        systemImage: "trash"
+                    )
+                    .font(.caption).foregroundStyle(.secondary)
                 }
                 if model.stopped {
                     Label("Stopped", systemImage: "stop.circle").foregroundStyle(.secondary)
@@ -293,7 +304,9 @@ struct SettingsView: View {
     @ViewBuilder private var audio: some View {
         if target.isLossyAudio {
             FormRow("Bitrate") {
-                menu($s.audioBitrate, target.bitrateOptions.map { ($0, $0 == 0 ? "VBR – best (~245 kbps)" : "\($0) kbps") })
+                menu(
+                    $s.audioBitrate,
+                    target.bitrateOptions.map { ($0, $0 == 0 ? "VBR – best (~245 kbps)" : "\($0) kbps") })
             }
         }
         if target.isLosslessAudio {
@@ -324,15 +337,23 @@ struct SettingsView: View {
         VStack(alignment: .leading, spacing: 10) {
             if target.id != "mov-prores" {
                 FormRow("Quality") {
-                    Slider(value: $s.videoQuality, in: 0...1) { EmptyView() }
-                        minimumValueLabel: { Text("Smaller").font(.caption) }
-                        maximumValueLabel: { Text("Better").font(.caption) }
-                        .frame(width: 250)
+                    Slider(value: $s.videoQuality, in: 0...1) {
+                        EmptyView()
+                    } minimumValueLabel: {
+                        Text("Smaller").font(.caption)
+                    } maximumValueLabel: {
+                        Text("Better").font(.caption)
+                    }
+                    .frame(width: 250)
                 }
             }
             FormRow("Resolution") {
-                menu($s.videoHeight, [(0, "Same as source"), (2160, "4K (2160p)"), (1440, "1440p"),
-                                      (1080, "1080p"), (720, "720p"), (480, "480p")])
+                menu(
+                    $s.videoHeight,
+                    [
+                        (0, "Same as source"), (2160, "4K (2160p)"), (1440, "1440p"),
+                        (1080, "1080p"), (720, "720p"), (480, "480p"),
+                    ])
             }
             FormRow("Frame rate") {
                 menu($s.fps, [(0, "Same as source"), (60, "60 fps"), (30, "30 fps"), (25, "25 fps"), (24, "24 fps")])
@@ -364,8 +385,12 @@ struct SettingsView: View {
     @ViewBuilder private var image: some View {
         if target.isLossyImage { qualitySlider }
         FormRow("Max size") {
-            menu($s.maxSize, [(0, "Same as source"), (4096, "4096 px"), (2048, "2048 px"), (1920, "1920 px"),
-                              (1280, "1280 px"), (1080, "1080 px"), (512, "512 px")])
+            menu(
+                $s.maxSize,
+                [
+                    (0, "Same as source"), (4096, "4096 px"), (2048, "2048 px"), (1920, "1920 px"),
+                    (1280, "1280 px"), (1080, "1080 px"), (512, "512 px"),
+                ])
         }
     }
 

@@ -6,7 +6,9 @@ import PDFKit
 enum DocConv {
     /// Formats macOS's textutil reads natively; Markdown is rendered to HTML first,
     /// anything else (source code, logs…) goes in as plain text.
-    static let textutilInputs: Set<String> = ["txt", "text", "rtf", "rtfd", "html", "htm", "doc", "docx", "odt", "wordml", "webarchive", "xml"]
+    static let textutilInputs: Set<String> = [
+        "txt", "text", "rtf", "rtfd", "html", "htm", "doc", "docx", "odt", "wordml", "webarchive", "xml",
+    ]
 
     static func isPlain(_ url: URL) -> Bool {
         let ext = url.pathExtension.lowercased()
@@ -64,7 +66,10 @@ enum DocConv {
 
         let info = NSPrintInfo()
         info.paperSize = a4 ? NSSize(width: 595.28, height: 841.89) : NSSize(width: 612, height: 792)
-        info.topMargin = 56; info.bottomMargin = 56; info.leftMargin = 56; info.rightMargin = 56
+        info.topMargin = 56
+        info.bottomMargin = 56
+        info.leftMargin = 56
+        info.rightMargin = 56
         info.horizontalPagination = .fit
         info.verticalPagination = .automatic
         info.isVerticallyCentered = false
@@ -92,12 +97,16 @@ enum DocConv {
 }
 
 enum PDFConv {
-    static func convert(_ input: URL, _ t: Target, _ s: ConvSettings,
-                        progress: @Sendable (Double) -> Void) throws -> [URL] {
+    static func convert(
+        _ input: URL, _ t: Target, _ s: ConvSettings,
+        progress: @Sendable (Double) -> Void
+    ) throws -> [URL] {
         if t.id == "pdf-txt" {
             guard let doc = PDFDocument(url: input) else { throw ConvertError("Couldn't open this PDF") }
             if doc.isLocked { throw ConvertError("This PDF is password-protected") }
-            guard let text = doc.string, text.rangeOfCharacter(from: CharacterSet.whitespacesAndNewlines.inverted) != nil else {
+            guard let text = doc.string,
+                text.rangeOfCharacter(from: CharacterSet.whitespacesAndNewlines.inverted) != nil
+            else {
                 throw ConvertError("This PDF contains no extractable text")
             }
             let out = uniqueOutput(for: input, ext: "txt")
@@ -128,17 +137,22 @@ enum PDFConv {
             let box = page.getBoxRect(.cropBox)
             let turned = page.rotationAngle % 180 != 0
             let size = turned ? CGSize(width: box.height, height: box.width) : box.size
-            let pw = Int((size.width * scale).rounded()), ph = Int((size.height * scale).rounded())
-            guard let ctx = CGContext(data: nil, width: pw, height: ph, bitsPerComponent: 8, bytesPerRow: 0,
-                                      space: CGColorSpace(name: CGColorSpace.sRGB)!,
-                                      bitmapInfo: CGImageAlphaInfo.noneSkipLast.rawValue)
+            let pw = Int((size.width * scale).rounded())
+            let ph = Int((size.height * scale).rounded())
+            guard
+                let ctx = CGContext(
+                    data: nil, width: pw, height: ph, bitsPerComponent: 8, bytesPerRow: 0,
+                    space: CGColorSpace(name: CGColorSpace.sRGB)!,
+                    bitmapInfo: CGImageAlphaInfo.noneSkipLast.rawValue)
             else { throw ConvertError("Page \(i) is too large to render") }
             ctx.setFillColor(CGColor(red: 1, green: 1, blue: 1, alpha: 1))
             ctx.fill(CGRect(x: 0, y: 0, width: pw, height: ph))
             ctx.interpolationQuality = .high
             ctx.scaleBy(x: scale, y: scale)
-            ctx.concatenate(page.getDrawingTransform(.cropBox, rect: CGRect(origin: .zero, size: size),
-                                                     rotate: 0, preserveAspectRatio: true))
+            ctx.concatenate(
+                page.getDrawingTransform(
+                    .cropBox, rect: CGRect(origin: .zero, size: size),
+                    rotate: 0, preserveAspectRatio: true))
             ctx.drawPDFPage(page)
             guard let img = ctx.makeImage() else { throw ConvertError("Couldn't render page \(i)") }
 

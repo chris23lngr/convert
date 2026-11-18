@@ -32,7 +32,8 @@ func runSync(_ exe: String, _ args: [String]) throws -> String {
     let p = Process()
     p.executableURL = URL(fileURLWithPath: exe)
     p.arguments = args
-    let out = Pipe(), err = Pipe()
+    let out = Pipe()
+    let err = Pipe()
     p.standardOutput = out
     p.standardError = err
     p.standardInput = FileHandle.nullDevice
@@ -74,8 +75,16 @@ func uniqueFolder(for input: URL, suffix: String) -> URL {
 private final class DataBox: @unchecked Sendable {
     private var data = Data()
     private let lock = NSLock()
-    func append(_ d: Data) { lock.lock(); data.append(d); lock.unlock() }
-    var value: Data { lock.lock(); defer { lock.unlock() }; return data }
+    func append(_ d: Data) {
+        lock.lock()
+        data.append(d)
+        lock.unlock()
+    }
+    var value: Data {
+        lock.lock()
+        defer { lock.unlock() }
+        return data
+    }
 }
 
 /// Runs ffmpeg-style processes with live progress and cancellation.
@@ -89,13 +98,16 @@ final class Runner: @unchecked Sendable {
         lock.unlock()
     }
 
-    func run(_ exe: String, _ args: [String], duration: Double,
-             progress: @escaping @Sendable (Double) -> Void) async throws {
+    func run(
+        _ exe: String, _ args: [String], duration: Double,
+        progress: @escaping @Sendable (Double) -> Void
+    ) async throws {
         try await withCheckedThrowingContinuation { (cont: CheckedContinuation<Void, Error>) in
             let p = Process()
             p.executableURL = URL(fileURLWithPath: exe)
             p.arguments = args
-            let out = Pipe(), err = Pipe()
+            let out = Pipe()
+            let err = Pipe()
             p.standardOutput = out
             p.standardError = err
             p.standardInput = FileHandle.nullDevice
@@ -113,13 +125,17 @@ final class Runner: @unchecked Sendable {
             p.terminationHandler = { [weak self] proc in
                 out.fileHandleForReading.readabilityHandler = nil
                 err.fileHandleForReading.readabilityHandler = nil
-                self?.lock.lock(); self?.current = nil; self?.lock.unlock()
+                self?.lock.lock()
+                self?.current = nil
+                self?.lock.unlock()
                 if proc.terminationStatus == 0 {
                     cont.resume()
                 } else if proc.terminationReason == .uncaughtSignal {
                     cont.resume(throwing: ConvertError("Stopped"))
                 } else {
-                    cont.resume(throwing: ConvertError(lastLine(errBox.value) ?? "ffmpeg exited with code \(proc.terminationStatus)"))
+                    cont.resume(
+                        throwing: ConvertError(
+                            lastLine(errBox.value) ?? "ffmpeg exited with code \(proc.terminationStatus)"))
                 }
             }
             lock.lock()
