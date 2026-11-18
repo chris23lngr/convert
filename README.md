@@ -102,7 +102,7 @@ If it doesn't show up, check **System Settings → General → Login Items & Ext
 
 Convert has no network code, no analytics and no accounts. It reads the files you give it and writes the converted files next to them. That's it.
 
-The website (not the app) counts visits so we know how many people stop by: no cookies, nothing stored in your browser, no IP addresses kept. The snippet is at the top of [`site/index.html`](site/index.html).
+The website (not the app) counts visits and clicks on Download and GitHub, so we know how many people stop by. It's counted on the site's own server (`site/api/`): no cookies, nothing stored in your browser, no IP addresses kept.
 
 ## Uninstall
 
@@ -155,6 +155,8 @@ build/Convert.app/Contents/MacOS/Convert --cli        # lists all format IDs
 ### The website
 
 `site/` is the landing page at [convert.newtonbuilds.dev](https://convert.newtonbuilds.dev). Its stylesheet pack (`site/saas/`) isn't part of this repo.
+
+`site/api/` holds its two server functions: `pulse.mjs` takes page views, and `go.mjs` serves `/download` and `/github` (see `site/vercel.json`), counting each click before redirecting. They forward to the Newton Studios dashboard, signed with `PULSE_SECRET`, which must be set on the Vercel project. Without it the site works and nothing is counted.
 
 ### Making a release
 
