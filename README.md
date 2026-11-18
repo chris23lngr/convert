@@ -102,6 +102,8 @@ If it doesn't show up, check **System Settings → General → Login Items & Ext
 
 Convert has no network code, no analytics and no accounts. It reads the files you give it and writes the converted files next to them. That's it.
 
+The website (not the app) counts visits so we know how many people stop by: no cookies, nothing stored in your browser, no IP addresses kept. The snippet is at the top of [`site/index.html`](site/index.html).
+
 ## Uninstall
 
 1. In Convert, choose **Convert → Remove Finder Quick Action** (or delete `~/Library/Services/Convert.workflow`).

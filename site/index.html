@@ -21,6 +21,36 @@
       if (matchMedia('(prefers-reduced-motion: reduce)').matches) document.querySelectorAll('video[autoplay]').forEach(v => { v.removeAttribute('autoplay'); v.pause(); });
     });
   </script>
+  <script>
+    // Visit counter for the Newton Studios dashboard. No cookies, nothing
+    // stored in the browser; the server keeps a daily anonymous count only.
+    (() => {
+      const endpoint = 'https://admin.newton-studios.com/api/pulse';
+      const params = new URLSearchParams(location.search);
+      const send = (kind, path) => {
+        try {
+          const body = JSON.stringify({
+            site: 'convert',
+            kind,
+            path: (path || location.pathname).slice(0, 300),
+            referrer: kind === 'pageview' && document.referrer ? document.referrer.slice(0, 1000) : undefined,
+            utm_source: (params.get('utm_source') || params.get('ref') || '').slice(0, 64) || undefined,
+            utm_campaign: (params.get('utm_campaign') || '').slice(0, 100) || undefined,
+          });
+          if (!(navigator.sendBeacon && navigator.sendBeacon(endpoint, body))) {
+            fetch(endpoint, { method: 'POST', body, keepalive: true, mode: 'no-cors' }).catch(() => {});
+          }
+        } catch {}
+      };
+      send('pageview');
+      addEventListener('click', (e) => {
+        const a = e.target instanceof Element ? e.target.closest('a[href]') : null;
+        if (!a || a.host === location.host) return;
+        if (/\.zip$/i.test(a.pathname)) send('download', a.href);
+        else send('outbound', a.href);
+      }, { capture: true });
+    })();
+  </script>
 </head>
 <body>
   <a class="sa-skip" href="#main">Skip to content</a>
