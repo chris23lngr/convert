@@ -73,7 +73,7 @@ Convert isn't signed with a paid Apple Developer certificate, so the first time 
 - **macOS 15 and later:** try to open it once, then go to **System Settings → Privacy & Security**, scroll down, click **Open Anyway** and confirm.
 - **macOS 14:** right-click `Convert.app` → **Open** → **Open**.
 
-**Option B: build it yourself** (needs Xcode 15 or later):
+**Option B: build it yourself** (needs Xcode 15.3 or later):
 
 ```bash
 git clone https://github.com/newtonstudios/convert.git
@@ -145,8 +145,28 @@ The Finder menu item is a tiny Automator Quick Action (`~/Library/Services/Conve
 
 ```bash
 build/Convert.app/Contents/MacOS/Convert --cli mp3 song.opus
-build/Convert.app/Contents/MacOS/Convert --cli        # lists all format IDs
+build/Convert.app/Contents/MacOS/Convert --cli                      # lists all format IDs
+build/Convert.app/Contents/MacOS/Convert --cli --targets song.opus  # the formats offered for a file
+CONVERT_SETTINGS='{"hardware": false}' build/Convert.app/Contents/MacOS/Convert --cli mp4-h264 clip.mov
 ```
+
+`CONVERT_SETTINGS` changes individual settings; the names are the fields of `ConvSettings` in `Formats.swift`.
+
+### Checks and the smoke test
+
+CI (`.github/workflows/ci.yml`) runs on every pull request and every push to `main`, using the same script you can run locally:
+
+```bash
+scripts/check.sh                 # everything below
+scripts/check.sh format          # swift-format lint; `scripts/check.sh format --fix` reformats
+scripts/check.sh build           # debug build and tests (warnings are errors), then the release app
+scripts/check.sh smoke           # rebuild the release app, then run the conversion smoke test
+scripts/check.sh site            # syntax-check site/api/*.mjs (needs node)
+```
+
+The **smoke test** (`scripts/smoke-test.sh`) generates small sample files (a hi-res WAV, a short video with sound, a PNG, Markdown, plain text and a PDF) and converts each one to every format the app offers for it. Any failed conversion fails the run and is listed by format ID. It needs `brew install ffmpeg webp`; without them, the formats that need them are skipped locally (CI treats that as a failure). Formats with hardware encoding (H.264, HEVC, ProRes, MKV) are also tested with it off.
+
+You need Xcode 26.6 or its Command Line Tools: CI uses that version, and its `swift-format` (6.3) decides the formatting. With only the Command Line Tools, `build` and `smoke` use a native release build, since the universal app needs Xcode; CI builds and tests the universal app.
 
 ### The icon
 
