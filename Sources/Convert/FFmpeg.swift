@@ -3,7 +3,7 @@ import Foundation
 struct Probe {
     var duration = 0.0
     var sampleRate = 0
-    var hires = false      // 24/32-bit source
+    var hires = false      // more than 16 bits per sample (24/32-bit integer or float PCM)
     var hasAudio = false
     var hasVideo = false
     var ok = false
@@ -14,7 +14,7 @@ enum FF {
         var p = Probe()
         guard let fp = Tools.ffprobe,
               let out = try? runSync(fp, ["-v", "error", "-show_entries",
-                                          "format=duration:stream=codec_type,sample_rate,sample_fmt,bits_per_raw_sample,disposition",
+                                          "format=duration:stream=codec_type,sample_rate,sample_fmt,bits_per_sample,bits_per_raw_sample,disposition",
                                           "-of", "json", url.path]),
               let json = try? JSONSerialization.jsonObject(with: Data(out.utf8)) as? [String: Any]
         else { return p }
@@ -29,11 +29,18 @@ enum FF {
         if let a = streams.first(where: { $0["codec_type"] as? String == "audio" }) {
             p.hasAudio = true
             p.sampleRate = Int(a["sample_rate"] as? String ?? "") ?? 0
-            let fmt = a["sample_fmt"] as? String ?? ""
-            let bits = Int(a["bits_per_raw_sample"] as? String ?? "") ?? 0
-            p.hires = fmt.hasPrefix("s32") || bits > 16
+            p.hires = isHiRes(sampleFormat: a["sample_fmt"] as? String ?? "",
+                              bitsPerSample: a["bits_per_sample"] as? Int ?? 0,
+                              bitsPerRawSample: Int(a["bits_per_raw_sample"] as? String ?? "") ?? 0)
         }
         return p
+    }
+
+    /// Whether a source has more than 16 bits per sample: 24/32-bit integer PCM, float PCM,
+    /// 24-bit FLAC/ALAC. Lossy decoders (MP3, AAC, Opus…) also hand out float samples, but
+    /// report no bit depth, so they count as 16-bit and "Match source" doesn't bloat them.
+    static func isHiRes(sampleFormat: String, bitsPerSample: Int, bitsPerRawSample: Int) -> Bool {
+        sampleFormat.hasPrefix("s32") || max(bitsPerSample, bitsPerRawSample) > 16
     }
 
     static let common = ["-hide_banner", "-nostdin", "-loglevel", "error", "-progress", "pipe:1", "-nostats"]
@@ -57,9 +64,10 @@ enum FF {
         case "mp2":    a += ["-c:a", "mp2", "-b:a", "\(br)k"]
         case "wav":    a += ["-c:a", deep ? "pcm_s24le" : "pcm_s16le"]
         case "aiff":   a += ["-c:a", deep ? "pcm_s24be" : "pcm_s16be"]
-        case "flac":   a += ["-c:a", "flac", "-sample_fmt", deep ? "s32" : "s16"]
-        case "alac":   a += ["-c:a", "alac", "-sample_fmt", deep ? "s32p" : "s16p"]
-        case "wv":     a += ["-c:a", "wavpack", "-sample_fmt", deep ? "s32p" : "s16p"]
+        // These store 24-bit audio in 32-bit samples; without the explicit depth WavPack writes 32-bit.
+        case "flac":   a += ["-c:a", "flac", "-sample_fmt", deep ? "s32" : "s16"] + (deep ? depth24 : [])
+        case "alac":   a += ["-c:a", "alac", "-sample_fmt", deep ? "s32p" : "s16p"] + (deep ? depth24 : [])
+        case "wv":     a += ["-c:a", "wavpack", "-sample_fmt", deep ? "s32p" : "s16p"] + (deep ? depth24 : [])
         default: break
         }
         if s.sampleRate > 0, t.sampleRates.contains(s.sampleRate) {
@@ -70,6 +78,8 @@ enum FF {
         if s.channels > 0, t.hasChannelOption { a += ["-ac", "\(s.channels)"] }
         return a
     }
+
+    private static let depth24 = ["-bits_per_raw_sample", "24"]
 
     private static func vorbisQuality(_ kbps: Int) -> String {
         switch kbps {
