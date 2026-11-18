@@ -150,14 +150,14 @@ enum Markdown {
             if let item = listItem(line) {
                 flushParagraph()
                 if listStack.isEmpty || indent > listStack.last!.indent {
-                    out.append("<\(item.tag)>")
+                    out.append(item.open)
                     listStack.append((item.tag, indent))
                 } else {
                     while listStack.count > 1, indent < listStack.last!.indent {
                         out.append("</li></\(listStack.removeLast().tag)>")
                     }
                     if listStack.last!.tag != item.tag {
-                        out.append("</li></\(listStack.removeLast().tag)><\(item.tag)>")
+                        out.append("</li></\(listStack.removeLast().tag)>" + item.open)
                         listStack.append((item.tag, indent))
                     } else {
                         out.append("</li>")
@@ -188,10 +188,15 @@ enum Markdown {
         return out.joined(separator: "\n")
     }
 
-    private static func listItem(_ line: String) -> (tag: String, text: String)? {
+    /// A list item line: its list's tag, the opening tag for a list that starts with it, and its text.
+    /// Like CommonMark, an ordered list counts from its first item's number; later numbers are ignored.
+    private static func listItem(_ line: String) -> (tag: String, open: String, text: String)? {
         let t = line.trimmingCharacters(in: .whitespaces)
-        if let m = match(#"^[-*+]\s+(.*)$"#, t) { return ("ul", m[1]) }
-        if let m = match(#"^\d{1,9}[.)]\s+(.*)$"#, t) { return ("ol", m[1]) }
+        if let m = match(#"^[-*+]\s+(.*)$"#, t) { return ("ul", "<ul>", m[1]) }
+        if let m = match(#"^(\d{1,9})[.)]\s+(.*)$"#, t) {
+            let start = Int(m[1]) ?? 1
+            return ("ol", start == 1 ? "<ol>" : "<ol start=\"\(start)\">", m[2])
+        }
         return nil
     }
 
