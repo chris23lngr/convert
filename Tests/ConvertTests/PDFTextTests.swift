@@ -1,19 +1,27 @@
 import CoreGraphics
 import CoreText
-import XCTest
+import Foundation
+import Testing
 
 @testable import Convert
 
-final class PDFTextTests: XCTestCase {
-    private func makePDF(text: String? = nil) throws -> URL {
-        let files = FileManager.default
-        let dir = files.temporaryDirectory.appendingPathComponent(UUID().uuidString)
-        try files.createDirectory(at: dir, withIntermediateDirectories: false)
-        addTeardownBlock { try files.removeItem(at: dir) }
+/// A fresh instance (and temporary folder) is made for every test; `deinit` cleans it up.
+final class PDFTextTests {
+    private let dir: URL
 
+    init() throws {
+        dir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: false)
+    }
+
+    deinit {
+        try? FileManager.default.removeItem(at: dir)
+    }
+
+    private func makePDF(text: String? = nil) throws -> URL {
         let url = dir.appendingPathComponent("sample.pdf")
         var bounds = CGRect(x: 0, y: 0, width: 200, height: 200)
-        let context = try XCTUnwrap(CGContext(url as CFURL, mediaBox: &bounds, nil))
+        let context = try #require(CGContext(url as CFURL, mediaBox: &bounds, nil))
         context.beginPDFPage(nil)
         context.fill(CGRect(x: 10, y: 10, width: 20, height: 20))
         if let text {
@@ -25,21 +33,22 @@ final class PDFTextTests: XCTestCase {
         return url
     }
 
-    func testGraphicsOnlyPDFDoesNotCreateTextFile() throws {
+    @Test func graphicsOnlyPDFDoesNotCreateTextFile() throws {
         let input = try makePDF()
-        let target = try XCTUnwrap(Targets.byID("pdf-txt"))
-        XCTAssertThrowsError(try PDFConv.convert(input, target, ConvSettings()) { _ in }) { error in
-            XCTAssertEqual(error.localizedDescription, "This PDF contains no extractable text")
+        let target = try #require(Targets.byID("pdf-txt"))
+        let error = #expect(throws: (any Error).self) {
+            try PDFConv.convert(input, target, ConvSettings()) { _ in }
         }
+        #expect(error?.localizedDescription == "This PDF contains no extractable text")
         let output = input.deletingPathExtension().appendingPathExtension("txt")
-        XCTAssertFalse(FileManager.default.fileExists(atPath: output.path))
+        #expect(!FileManager.default.fileExists(atPath: output.path))
     }
 
-    func testExportsSelectableText() throws {
+    @Test func exportsSelectableText() throws {
         let input = try makePDF(text: "Sample text")
-        let target = try XCTUnwrap(Targets.byID("pdf-txt"))
+        let target = try #require(Targets.byID("pdf-txt"))
         let outputs = try PDFConv.convert(input, target, ConvSettings()) { _ in }
-        let text = try String(contentsOf: XCTUnwrap(outputs.first), encoding: .utf8)
-        XCTAssertEqual(text.trimmingCharacters(in: .whitespacesAndNewlines), "Sample text")
+        let text = try String(contentsOf: #require(outputs.first), encoding: .utf8)
+        #expect(text.trimmingCharacters(in: .whitespacesAndNewlines) == "Sample text")
     }
 }
